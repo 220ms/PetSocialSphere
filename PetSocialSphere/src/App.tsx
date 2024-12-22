@@ -4,6 +4,7 @@ import About from "./pages/About";
 import React from "react";
 import Login from "./pages/Login";
 import Contact from "./pages/Contact";
+import Feed from "./pages/Feed";
 function App() {
   return (
     <>
@@ -12,6 +13,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/feed" element={<Feed />} />
       </Routes>
     </>
   );
