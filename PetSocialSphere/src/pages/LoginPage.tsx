@@ -3,6 +3,7 @@ import pets from "../assets/pets.png";
 import Header from "../components/Header";
 import Login from "../components/Login";
 import Signup from "../components/Signup";
+
 const LoginPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
 
@@ -12,22 +13,23 @@ const LoginPage = () => {
 
   return (
     <>
-      <div className="bg-gray-900 text-gray-100 h-screen flex flex-col">
+      <div className="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
         {/* Header */}
         <Header />
         {/* Main Content */}
-        <div className="grid grid-cols-2 flex-grow">
+        <div className="grid grid-cols-1 md:grid-cols-2 flex-grow relative">
           {/* Left Image Section */}
-          <div className="relative">
-            <img
-              className="absolute inset-0 w-full h-full object-cover"
-              src={pets}
-              alt="Pets"
-            />
+          <div className="relative md:block">
+            <img className="w-full h-full object-cover" src={pets} alt="Pets" />
           </div>
           {/* Right Section */}
-          {isSignUp && <Signup toggleForm={toggleForm} />}
-          {!isSignUp && <Login toggleForm={toggleForm} />}
+          <div className="flex justify-center items-center p-4 bg-gray-900 bg-opacity-60">
+            {isSignUp ? (
+              <Signup toggleForm={toggleForm} />
+            ) : (
+              <Login toggleForm={toggleForm} />
+            )}
+          </div>
         </div>
       </div>
     </>
