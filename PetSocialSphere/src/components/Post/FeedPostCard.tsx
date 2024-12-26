@@ -2,6 +2,7 @@ import { memo } from "react";
 import PostCardBody from "./PostCardBody";
 import PostCardHeader from "./PostCardHeader";
 import Gallery from "./Gallery";
+import React from "react";
 
 // Define the props for the FeedPostCard component
 interface FeedPostCardProps {

@@ -1,6 +1,7 @@
 interface GalleryProps {
   images: string[];
 }
+import React from "react";
 
 const Gallery: React.FC<GalleryProps> = ({ images }) => {
   return (

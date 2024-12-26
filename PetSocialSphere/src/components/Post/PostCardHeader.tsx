@@ -1,4 +1,5 @@
 import person from "../../assets/person-headshot.jpg";
+import React from "react";
 const PostCardHeader = () => {
   return (
     <div className="flex items-center gap-4">
