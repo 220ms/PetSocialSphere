@@ -31,7 +31,7 @@ const Login: React.FC<SignupProps> = ({ toggleForm }) => {
     <div className="flex items-center justify-center p-6 bg-gray-900">
       {/* Adjusted width and responsive padding/margin */}
       <div className="w-full max-w-lg sm:max-w-md bg-gray-800 p-6 sm:p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
         <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Name Input (Only for Sign Up) */}
           <FormInput

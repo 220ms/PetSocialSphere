@@ -1,7 +1,7 @@
 const express = require("express");
 const userRouter = require("./Routes/userRoutes.js");
 const cors = require("cors");
-
+const globalErrorHandler = require("./Controllers/errorController.js");
 const app = express();
 app.use(express.json());
 app.use(
@@ -13,5 +13,5 @@ app.use(
 );
 
 app.use("/api/v1/users", userRouter);
-
+app.use(globalErrorHandler);
 module.exports = app;
