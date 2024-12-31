@@ -2,6 +2,8 @@ const jwt = require("jsonwebtoken");
 const User = require("../Models/usersModel.js");
 const AppError = require("../utils/appError.js");
 const catchAsync = require("../utils/catchAsync.js");
+const dotenv = require("dotenv").config();
+
 const signToken = (id) => {
   console.log(typeof process.env.JWT_EXPIRES_IN);
   console.log(process.env.JWT_EXPIRES_IN);
@@ -26,6 +28,7 @@ const createSendToken = (user, statusCode, req, res) => {
 
   res.status(statusCode).json({
     status: "success",
+    token: token,
     data: {
       user,
     },
@@ -33,6 +36,7 @@ const createSendToken = (user, statusCode, req, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  console.log("Received request for signup");
   const newUser = await User.create({
     fname: req.body.fname,
     sname: req.body.sname,
@@ -40,7 +44,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
-
+  console.log("User created successfully");
   createSendToken(newUser, 201, req, res);
 });
 

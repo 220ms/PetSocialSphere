@@ -47,7 +47,7 @@ export async function signup(signupData: SignupFormData): Promise<ApiResponse> {
 
 
 export async function login(loginData: LoginFormData): Promise<ApiResponse> {
-  const response = await fetch(`http://localhost:8000/api/v1/users/signup`, {
+  const response = await fetch(`http://localhost:8000/api/v1/users/login`, {
     method: "POST",
     body: JSON.stringify(loginData),
     headers: {
