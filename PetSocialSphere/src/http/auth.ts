@@ -8,7 +8,6 @@ export interface SignupFormData {
 
 export interface ApiResponse {
   status: string;
-  token: string;
   data: {
     user: {
       fname: string;
@@ -61,7 +60,23 @@ export async function login(loginData: LoginFormData): Promise<ApiResponse> {
 
   const data: ApiResponse = await response.json();
 
-  localStorage.setItem('user',JSON.stringify(data.data.user));
-  localStorage.setItem('JWT',data.token);
+  return data;
+}
+
+export async function checkAuth(): Promise<ApiResponse> {
+  const response = await fetch(`http://localhost:8000/api/v1/users/checkAuth`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("An error occurred checking authentication status");
+  }
+
+  const data: ApiResponse = await response.json();
+
   return data;
 }

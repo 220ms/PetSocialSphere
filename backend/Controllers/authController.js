@@ -1,68 +1,112 @@
-const jwt = require("jsonwebtoken");
-const User = require("../Models/usersModel.js");
-const AppError = require("../utils/appError.js");
+const dotenv = require("dotenv");
+dotenv.config();
 const catchAsync = require("../utils/catchAsync.js");
-const dotenv = require("dotenv").config();
+const { CREATED } = require("../constants/http.js");
+const {
+  signupSchema,
+  loginSchema,
+  verificationCodeSchema,
+  emailSchema,
+  resetPasswordSchema,
+} = require("../Schemas/authSchema.js");
+const {
+  createAccount,
+  loginUser,
+  verifyEmail,
+  sendPasswordResetEmail,
+  resetPassword,
+  refreshUserAccessToken,
+} = require("../services/authService.js");
+const {
+  setAuthCookies,
+  clearAuthCookies,
+  getRefreshTokenCookieOptions,
+  getAccessTokenCookieOptions,
+} = require("../utils/cookies.js");
+const { OK, UNAUTHORIZED } = require("../constants/http.js");
+const { verifyToken } = require("../utils/jwt.js");
+const { SessionModel } = require("../Models/sessionModel.js");
+const { appAssert } = require("../utils/appAssert.js");
 
-const signToken = (id) => {
-  console.log(typeof process.env.JWT_EXPIRES_IN);
-  console.log(process.env.JWT_EXPIRES_IN);
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
-
-const createSendToken = (user, statusCode, req, res) => {
-  const token = signToken(user._id);
-  const cookieExpiresIn =
-    parseInt(process.env.JWT_EXPIRES_IN) * 24 * 60 * 60 * 1000;
-  res.cookie("jwt", token, {
-    expires: new Date(Date.now() + cookieExpiresIn),
-    httpOnly: true,
-    secure: req.secure || req.headers["x-forwarded-proto"] === "https",
-  });
-
-  // Remove password from output
-  user.password = undefined;
-  user.token = token;
-
-  res.status(statusCode).json({
-    status: "success",
-    token: token,
-    data: {
-      user,
-    },
-  });
-};
-
-exports.signup = catchAsync(async (req, res, next) => {
+exports.signupHandler = catchAsync(async (req, res, next) => {
   console.log("Received request for signup");
-  const newUser = await User.create({
-    fname: req.body.fname,
-    sname: req.body.sname,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
+
+  const request = signupSchema.parse({
+    ...req.body,
+    userAgent: req.headers["user-agent"],
   });
-  console.log("User created successfully");
-  createSendToken(newUser, 201, req, res);
+  // call service
+  const { user, accessToken, refreshToken } = await createAccount(request);
+  // send response.
+  return setAuthCookies({ res, accessToken, refreshToken })
+    .status(CREATED)
+    .json(user);
 });
 
-exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+exports.loginHandler = catchAsync(async (req, res, next) => {
+  const request = loginSchema.parse({
+    ...req.body,
+    userAgent: req.headers["user-agent"],
+  });
 
-  // 1) Check if email and password exist
-  if (!email || !password) {
-    return next(new AppError("Please provide email and password!", 400));
+  const { accessToken, refreshToken } = await loginUser(request);
+  return setAuthCookies({ res, accessToken, refreshToken }).status(OK).json({
+    message: "Login successfull",
+  });
+});
+
+exports.logoutHandler = catchAsync(async (req, res) => {
+  const accessToken = req.cookies.accessToken;
+  const { payload } = verifyToken(accessToken);
+  if (payload) {
+    await SessionModel.findByIdAndDelete(payload.sessionId);
   }
+  return clearAuthCookies(res).status(OK).json({
+    message: "Logout successfull",
+  });
+});
 
-  // 2) Check if user exists && password is correct
-  const user = await User.findOne({ email }).select("+password");
+exports.refreshHandler = catchAsync(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+  appAssert(refreshToken, UNAUTHORIZED, "Missing refresh token");
 
-  if (!user || !(await user.correctPassword(password, user.password))) {
-    return next(new AppError("Incorrect email or password", 401));
+  const { accessToken, newRefreshToken } = await refreshUserAccessToken(
+    refreshToken
+  );
+
+  if (newRefreshToken) {
+    res.cookie("refreshToken", newRefreshToken, getRefreshTokenCookieOptions());
   }
+  return res
+    .status(OK)
+    .cookie("accessToken", accessToken, getAccessTokenCookieOptions())
+    .json({
+      message: "Access token refreshed",
+    });
+});
 
-  // 3) If everything is ok, send token to client
-  createSendToken(user, 200, req, res);
+exports.verifyEmailHandler = catchAsync(async (req, res) => {
+  const verificationCode = verificationCodeSchema.parse(req.params.code);
+
+  await verifyEmail(verificationCode);
+
+  return res.status(OK).json({
+    message: "Email was successfully verified",
+  });
+});
+
+exports.sendPasswordResetHandler = catchAsync(async (req, res) => {
+  const email = emailSchema.parse(req.body.email);
+  await sendPasswordResetEmail(email);
+  return res.status(OK).json({
+    message: "Password reset email sent",
+  });
+});
+
+exports.resetPasswordHandler = catchAsync(async (req, res) => {
+  const request = resetPasswordSchema.parse(req.body);
+  await resetPassword(request);
+  return clearAuthCookies(res).status(OK).json({
+    message: "Password reset successfull",
+  });
 });
